@@ -1,0 +1,170 @@
+
+const SPREADSHEET_ID = "YOUR_SPREADSHEET_ID";
+
+function doGet() {
+  return HtmlService.createHtmlOutput(`
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #eef2ff;
+  padding: 20px;
+}
+.container {
+  max-width: 500px;
+  margin: auto;
+  padding: 25px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px #0002;
+}
+h2 {
+  text-align: center;
+  color: #2563eb;
+}
+label {
+  display: block;
+  margin-top: 15px;
+  font-weight: bold;
+}
+input, select, textarea {
+  width: 100%;
+  padding: 11px;
+  margin-top: 6px;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 7px;
+}
+button {
+  width: 100%;
+  padding: 13px;
+  margin-top: 22px;
+  border: none;
+  border-radius: 7px;
+  background: #2563eb;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.6;
+}
+#message {
+  text-align: center;
+  font-weight: bold;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>Student Enrollment Form</h2>
+
+<form id="form">
+<label>Full Name *</label>
+<input name="name" required maxlength="100">
+
+<label>Email Address *</label>
+<input name="email" type="email" required>
+
+<label>Phone Number *</label>
+<input name="phone" type="tel"
+ pattern="[0-9]{10}" maxlength="10"
+ title="Enter a 10-digit phone number" required>
+
+<label>Course *</label>
+<select name="course" required>
+<option value="">Select Course</option>
+<option>B.Tech CSE</option>
+<option>B.Tech IT</option>
+<option>BCA</option>
+<option>BBA</option>
+<option>MBA</option>
+<option>Other</option>
+</select>
+
+<label>Date of Birth *</label>
+<input name="dob" type="date" required>
+
+<label>Address *</label>
+<textarea name="address" rows="3" required></textarea>
+
+<button id="btn" type="submit">Submit Enrollment</button>
+<p id="message" role="status" aria-live="polite"></p>
+</form>
+</div>
+
+<script>
+const form = document.getElementById("form");
+const btn = document.getElementById("btn");
+const msg = document.getElementById("message");
+
+form.addEventListener("submit", function(e) {
+  e.preventDefault();
+  if (!form.reportValidity()) return;
+
+  const data = Object.fromEntries(new FormData(form).entries());
+  btn.disabled = true;
+  btn.textContent = "Submitting...";
+  msg.style.color = "#555";
+  msg.textContent = "Please wait...";
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      msg.style.color = "green";
+      msg.textContent = result;
+      form.reset();
+      btn.disabled = false;
+      btn.textContent = "Submit Enrollment";
+    })
+    .withFailureHandler(function(error) {
+      msg.style.color = "red";
+      msg.textContent = "Submission failed. Please try again.";
+      console.error(error);
+      btn.disabled = false;
+      btn.textContent = "Submit Enrollment";
+    })
+    .saveStudent(data);
+});
+</script>
+</body>
+</html>
+`).setTitle("Student Enrollment Form")
+  .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function saveStudent(data) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+
+  try {
+    const sheet = SpreadsheetApp
+      .openById(SPREADSHEET_ID)
+      .getSheets()[0];
+
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow([
+        "Timestamp", "Full Name", "Email",
+        "Phone", "Course", "Date of Birth", "Address"
+      ]);
+    }
+
+    sheet.appendRow([
+      new Date(),
+      data.name,
+      data.email,
+      data.phone,
+      data.course,
+      data.dob,
+      data.address
+    ]);
+
+    return "Enrollment submitted successfully!";
+  } finally {
+    lock.releaseLock();
+  }
+}
+s
+scr
