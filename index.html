@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TwitterX</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #000;
+      color: #e7e9ea;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    header {
+      position: sticky; top: 0;
+      background: rgba(0,0,0,.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #2f3336;
+      padding: 14px 16px;
+      display: flex; align-items: center; gap: 10px;
+      z-index: 10;
+    }
+    header svg { width: 28px; height: 28px; fill: #e7e9ea; }
+    header h1 { font-size: 20px; font-weight: 800; }
+    main { max-width: 600px; margin: 0 auto; border-left: 1px solid #2f3336; border-right: 1px solid #2f3336; min-height: 100vh; }
+    .compose { padding: 16px; border-bottom: 1px solid #2f3336; display: flex; gap: 12px; }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; background: #1d9bf0; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .compose textarea { flex: 1; background: transparent; border: none; outline: none; color: inherit; font-size: 18px; resize: none; height: 60px; }
+    .compose button { align-self: flex-end; background: #1d9bf0; color: #fff; border: none; border-radius: 999px; padding: 8px 18px; font-weight: 700; cursor: pointer; }
+    .post { padding: 16px; border-bottom: 1px solid #2f3336; display: flex; gap: 12px; }
+    .post .name { font-weight: 700; }
+    .post .handle { color: #71767b; margin-left: 4px; }
+    .post p { margin-top: 4px; line-height: 1.4; }
+    .chat-section { padding: 16px; }
+    .chat-section h2 { font-size: 18px; margin-bottom: 10px; }
+    .chat-section iframe { width: 100%; height: 600px; border: 1px solid #2f3336; border-radius: 16px; background: #fff; }
+  </style>
+</head>
+<body>
+  <header>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+    <h1>TwitterX</h1>
+  </header>
+
+  <main>
+    <div class="compose">
+      <div class="avatar">T</div>
+      <textarea id="text" placeholder="What is happening?!"></textarea>
+      <button onclick="addPost()">Post</button>
+    </div>
+
+    <div id="feed">
+      <div class="post">
+        <div class="avatar">X</div>
+        <div>
+          <span class="name">TwitterX</span><span class="handle">@twitterx</span>
+          <p>Welcome to TwitterX! Write a post above, or chat with our assistant below.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-section">
+      <h2>Chat with our assistant</h2>
+      <iframe
+        src="https://www.chatbase.co/chatbot-iframe/uZfvDmlL32ff_wyNiDvES"
+        title="TwitterX Chatbot"
+        allow="clipboard-write"
+        loading="lazy"></iframe>
+    </div>
+  </main>
+
+  <script>
+    function addPost() {
+      var box = document.getElementById("text");
+      var value = box.value.trim();
+      if (!value) return;
+      var post = document.createElement("div");
+      post.className = "post";
+      post.innerHTML = '<div class="avatar">T</div><div><span class="name">You</span><span class="handle">@you</span><p></p></div>';
+      post.querySelector("p").textContent = value;
+      var feed = document.getElementById("feed");
+      feed.insertBefore(post, feed.firstChild);
+      box.value = "";
+    }
+  </script>
+</body>
+</html>
