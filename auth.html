@@ -1,0 +1,410 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase Login & Signup</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      background: white;
+      padding: 35px;
+      border-radius: 18px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #222;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #777;
+      font-size: 14px;
+      margin-bottom: 25px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: #333;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      outline: none;
+      font-size: 15px;
+    }
+
+    input:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.12);
+    }
+
+    button {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 8px;
+      background: #667eea;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #5366d5;
+    }
+
+    button:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    .switch-text {
+      text-align: center;
+      margin-top: 22px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .switch-text a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #message {
+      margin-top: 15px;
+      font-size: 14px;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+
+    .success {
+      color: #15803d;
+    }
+
+    .error {
+      color: #dc2626;
+    }
+
+    #dashboard {
+      display: none;
+      text-align: center;
+    }
+
+    #dashboard p {
+      margin: 18px 0;
+      color: #555;
+      overflow-wrap: anywhere;
+    }
+
+    #logoutBtn {
+      background: #dc3545;
+    }
+
+    #logoutBtn:hover {
+      background: #b52a37;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <!-- LOGIN AND SIGNUP -->
+    <div id="authSection">
+      <div class="logo">🔐</div>
+      <h2 id="formTitle">Welcome Back!</h2>
+      <p class="subtitle" id="formSubtitle">
+        Login to access your account
+      </p>
+
+      <form id="authForm">
+        <div class="form-group hidden" id="nameGroup">
+          <label for="name">Full Name</label>
+          <input
+            type="text"
+            id="name"
+            placeholder="Enter your full name"
+            autocomplete="name"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="Enter your email"
+            autocomplete="email"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="Enter password (at least 6 characters)"
+            minlength="6"
+            autocomplete="current-password"
+            required
+          >
+        </div>
+
+        <button type="submit" id="submitBtn">Login</button>
+      </form>
+
+      <p class="switch-text">
+        <span id="switchLabel">Don't have an account?</span>
+        <a id="switchMode">Sign Up</a>
+      </p>
+
+      <p id="message" role="status" aria-live="polite"></p>
+    </div>
+
+    <!-- LOGGED-IN DASHBOARD -->
+    <div id="dashboard">
+      <div class="logo">🎉</div>
+      <h2>Login Successful!</h2>
+      <p>Welcome to your account.</p>
+      <p id="userEmail"></p>
+      <button id="logoutBtn" type="button">Logout</button>
+      <p id="dashboardMessage" role="status" aria-live="polite"></p>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { initializeApp }
+      from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut,
+      updateProfile
+    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+
+    // YOUR FIREBASE CONFIGURATION
+    const firebaseConfig = {
+      apiKey: "AIzaSyBFlsAO0fuib5HwrkdZVKh2TyDv15ecNCM",
+      authDomain: "twitterx-e6a7a.firebaseapp.com",
+      projectId: "twitterx-e6a7a",
+      storageBucket: "twitterx-e6a7a.firebasestorage.app",
+      messagingSenderId: "1006631648019",
+      appId: "1:1006631648019:web:81557ea5877d9a3aa438e6",
+      measurementId: "G-R78LWSEQGE"
+    };
+
+    // INITIALIZE FIREBASE
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    let isSignup = false;
+
+    const authSection = document.getElementById("authSection");
+    const dashboard = document.getElementById("dashboard");
+    const authForm = document.getElementById("authForm");
+    const formTitle = document.getElementById("formTitle");
+    const formSubtitle = document.getElementById("formSubtitle");
+    const nameGroup = document.getElementById("nameGroup");
+    const nameInput = document.getElementById("name");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const submitBtn = document.getElementById("submitBtn");
+    const switchLabel = document.getElementById("switchLabel");
+    const switchMode = document.getElementById("switchMode");
+    const message = document.getElementById("message");
+    const userEmail = document.getElementById("userEmail");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    function showMessage(text, type = "error") {
+      message.textContent = text;
+      message.className = type;
+    }
+
+    function setLoading(loading) {
+      submitBtn.disabled = loading;
+      submitBtn.textContent = loading
+        ? "Please wait..."
+        : (isSignup ? "Create Account" : "Login");
+    }
+
+    function setMode(signup) {
+      isSignup = signup;
+
+      formTitle.textContent = signup
+        ? "Create Account"
+        : "Welcome Back!";
+
+      formSubtitle.textContent = signup
+        ? "Sign up to get started"
+        : "Login to access your account";
+
+      nameGroup.classList.toggle("hidden", !signup);
+      nameInput.required = signup;
+
+      passwordInput.autocomplete = signup
+        ? "new-password"
+        : "current-password";
+
+      switchLabel.textContent = signup
+        ? "Already have an account?"
+        : "Don't have an account?";
+
+      switchMode.textContent = signup ? "Login" : "Sign Up";
+      message.textContent = "";
+      setLoading(false);
+    }
+
+    switchMode.addEventListener("click", () => {
+      setMode(!isSignup);
+    });
+
+    function friendlyError(error) {
+      const messages = {
+        "auth/email-already-in-use":
+          "This email is already registered. Please log in.",
+        "auth/invalid-email":
+          "Please enter a valid email address.",
+        "auth/weak-password":
+          "Please choose a stronger password.",
+        "auth/invalid-credential":
+          "Incorrect email or password.",
+        "auth/user-not-found":
+          "No account found. Please sign up first.",
+        "auth/wrong-password":
+          "Incorrect email or password.",
+        "auth/too-many-requests":
+          "Too many attempts. Please try again later.",
+        "auth/network-request-failed":
+          "Network error. Check your internet connection.",
+        "auth/operation-not-allowed":
+          "Enable Email/Password in Firebase Authentication settings.",
+        "auth/unauthorized-domain":
+          "Add this website's domain in Firebase authorized domains."
+      };
+
+      return messages[error.code] ||
+        "Something went wrong. Please try again.";
+    }
+
+    authForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      showMessage("");
+      setLoading(true);
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const fullName = nameInput.value.trim();
+
+      try {
+        if (isSignup) {
+          if (!fullName) {
+            throw new Error("Please enter your full name.");
+          }
+
+          const credential =
+            await createUserWithEmailAndPassword(
+              auth, email, password
+            );
+
+          await updateProfile(credential.user, {
+            displayName: fullName
+          });
+        } else {
+          await signInWithEmailAndPassword(
+            auth, email, password
+          );
+        }
+      } catch (error) {
+        showMessage(
+          error.code ? friendlyError(error) : error.message
+        );
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    // UPDATE THE PAGE WHEN AUTHENTICATION CHANGES
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        authSection.style.display = "none";
+        dashboard.style.display = "block";
+        userEmail.textContent =
+          (user.displayName ? user.displayName + " — " : "") +
+          (user.email || "");
+      } else {
+        authSection.style.display = "block";
+        dashboard.style.display = "none";
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      logoutBtn.disabled = true;
+      logoutBtn.textContent = "Logging out...";
+
+      try {
+        await signOut(auth);
+      } catch (error) {
+        document.getElementById("dashboardMessage").textContent =
+          "Logout failed. Please try again.";
+      } finally {
+        logoutBtn.disabled = false;
+        logoutBtn.textContent = "Logout";
+      }
+    });
+  </script>
+
+</body>
+</html>
